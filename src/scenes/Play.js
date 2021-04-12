@@ -61,32 +61,72 @@ class Play extends Phaser.Scene {
 
             frameRate: 30,
         });
+
+        // initialize score
+        this.p1Score = 0;
+
+        // display score
+        let scoreConfig = {
+            fontFamily: 'Courier',
+            fontSize: '28px',
+            backgroundColor: '#F3B141',
+            color: '#843605',
+            align: 'right',
+            padding: {
+                top: 5,
+                bottom: 5,
+            },
+            fixedWidth: 100,
+        }
+        this.scoreLeft = this.add.text(borderUISize + borderPadding, borderUISize + borderPadding * 2, this.p1Score, scoreConfig);
+
+        // GAME OVER flag
+        this.gameOver = false;
+
+        // 60-second play clock
+        scoreConfig.fixedWidth = 0;
+        this.clock = this.time.delayedCall(game.settings.gameTimer, () => {
+            this.add.text(game.config.width/2, game.config.height/2, 'GAME OVER', scoreConfig).setOrigin(0.5);
+            this.add.text(game.config.width/2, game.config.height/2 + 64, 'Press (R) to Restart or ← for Menu', scoreConfig).setOrigin(0.5);
+            this.gameOver = true;
+        }, null, this);
     }
 
     update() {
+        // check key input for restart
+        if (this.gameOver && Phaser.Input.Keyboard.JustDown(keyR)){
+            this.scene.restart();
+        }
+
+        if (this.GameOver && Phaser.Input.Keyboard.JustDown(keyLEFT)){
+            this.scene.start("menuScene");
+        }
+
         this.starfield.tilePositionX -= starSpeed;
-
-        // update rocket
-        this.p1Rocket.update();
-
-        // update ship01
-        this.ship01.update();
-        this.ship02.update();
-        this.ship03.update();
+        
+        if (!this.gameOver){
+            // update rocket
+            this.p1Rocket.update();
+    
+            // update ship01
+            this.ship01.update();
+            this.ship02.update();
+            this.ship03.update();
+        }
 
         // check collisions
         if (this.checkCollision(this.p1Rocket, this.ship01)){
-            console.log("KACHOW - ship01");
+            // console.log("KACHOW - ship01");
             this.shipExplode(this.ship01);
             this.p1Rocket.reset();
         }
         if (this.checkCollision(this.p1Rocket, this.ship02)){
-            console.log("KABOOM - ship02");
+            // console.log("KABOOM - ship02");
             this.shipExplode(this.ship02);
             this.p1Rocket.reset();
         }
         if (this.checkCollision(this.p1Rocket, this.ship03)){
-            console.log("KRAKOW - ship03");
+            // console.log("KRAKOW - ship03");
             this.shipExplode(this.ship03);
             this.p1Rocket.reset();
         }
@@ -116,5 +156,12 @@ class Play extends Phaser.Scene {
             ship.alpha = 1;
             boom.destroy();
         });
+
+        //score add and repaint
+        this.p1Score += ship.points;
+        this.scoreLeft.text = this.p1Score;
+
+        //sound effect
+        this.sound.play('sfx_explosion');
     }
 }
